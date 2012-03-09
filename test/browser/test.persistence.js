@@ -637,9 +637,9 @@ $(document).ready(function(){
   asyncTest("filter collection", function() {
       persistence.reset(function() {
           persistence.schemaSync(function() {
-              var doneTasks = Task.all().filter("done", "=", true);
+              var allTasks = Task.all().filter("done", "=", true);
               var changesDetected = 0;
-              doneTasks.addEventListener('change', function() {
+              allTasks.addEventListener('change', function() {
                   changesDetected++;
                 });
               for(var i = 0; i < 10; i++) {
@@ -660,33 +660,6 @@ $(document).ready(function(){
         });
     });
     
-    asyncTest("addAll single change event", function() {
-        persistence.reset(function() {
-            persistence.schemaSync(function() {
-                tasks = [];
-                for (var i = 0; i < 10; i++) {
-                  var task = new Task({name: "Task " + i});
-                  task.done = i % 2 === 0;
-                  tasks.push(task);
-                }
-
-                var doneTasks = Task.all().filter("done", "=", true);
-                var changesDetected = 0;
-                doneTasks.addEventListener('change', function() {
-                    changesDetected++;
-                    equals(arguments[2].length, 5, "detected 5 changed elements");
-                  });
-                var addsDetected = 0;
-                doneTasks.addEventListener('add', function() {
-                    addsDetected++;
-                  });
-                Task.all().addAll(tasks);
-                equals(addsDetected, 5, "detected individual add events");
-                equals(changesDetected, 1, "detected single change event");
-                start();
-            });
-        });
-    });
     
     
     module("Indexes");
