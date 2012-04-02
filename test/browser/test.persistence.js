@@ -452,6 +452,33 @@ $(document).ready(function(){
       dateFilterTests(coll, start);
     });
 
+  asyncTest("Relationship filter", function() {
+      var tags = [];
+      for(var i = 0; i < 3; i++) {
+        var tag  = new Tag({name: "Tag " + i});
+        persistence.add(tag);
+        tags.push(tag);
+      }
+      var tasks = [];
+      for(var i = 0; i < 15; i++) {
+        var task = new Task({name: "Task " + i, counter: i});
+        persistence.add(task);
+        task.tags.add(tags[Math.floor(i / 5)]);
+        tasks.push(task);
+      }
+
+      var tagColl = Tag.all().filter('id', 'in', [tags[0].id, tags[1].id]);
+      var taskColl = Task.all().and(new persistence.RelationshipFilter('tags', 'any in', tagColl));
+
+      taskColl.order('counter').list(function (result) {
+          equals(result.length, 10, 'Correct number of tasks');
+          for (var i = 0; i < 10; i++) {
+            equals(result[i].id, tasks[i].id, 'Correct tasks');
+          }
+          start();
+        });
+    });
+
 
   function intOrderTests(coll, callback) {
     var tasks = [];
