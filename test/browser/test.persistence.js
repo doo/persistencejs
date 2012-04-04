@@ -799,19 +799,19 @@ $(document).ready(function(){
 
               task.tags.add(tag1);
               task.tags.add(tag2);
-              equals(changesDetected, 2, 'detected all additions');
+              equals(changesDetected, 2, 'detected two additions');
 
-              changesDetected = 0;
-              task.tags.filter('name', '=', 'new').addEventListener(function() {
-                  changesDetected++;
+              var filteredChangesDetected = 0;
+              task.tags.filter('name', '=', 'new').addEventListener('change', function() {
+                  filteredChangesDetected++;
                 });
               var tag3 = new Tag({name: 'new'});
               task.tags.add(tag3)
-              equals(changesDetected, 1, 'detected filtered addition');
+              equals(filteredChangesDetected, 1, 'detected filtered addition');
 
-              changesDetected = 0;
+              filteredChangesDetected = 0;
               tag3.name = 'old';
-              equals(changesDetected, 1, 'detected property change');
+              equals(filteredChangesDetected, 1, 'detected property change');
 
               changesDetected = 0;
               var task2 = new Task({name: "Some other task"});
