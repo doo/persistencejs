@@ -813,6 +813,37 @@ $(document).ready(function(){
               tag3.name = 'old';
               equals(changesDetected, 1, 'detected property change');
 
+              changesDetected = 0;
+              var task2 = new Task({name: "Some other task"});
+              task2.tags.add(tag1);
+              equals(changesDetected, 0, 'no changes when adding to another collection');
+
+              start();
+            });
+        });
+    });
+
+  asyncTest("propertychange", function() {
+      persistence.reset(function() {
+          persistence.schemaSync(function() {
+              var tasks = [];
+              for(var i = 0; i < 10; i++) {
+                var task = new Task({name: "Task " + i, done: false});
+                tasks.push(task);
+                persistence.add(task);
+              }
+
+              changesDetected = 0;
+              Task.all().addEventListener('propertychange', function () {
+                  changesDetected++;
+                });
+              Task.all().filter('name', '=', 'Task 0').addEventListener('propertychange', function () {
+                  changesDetected++;
+                });
+              tasks[0].done = true;
+              tasks[1].done = true;
+              equals(changesDetected, 3, 'detected property changes');
+
               start();
             });
         });
