@@ -705,7 +705,7 @@ $(document).ready(function(){
 
   module("Events");
 
-  asyncTest("all collection", function() {
+  asyncTest("add/remove", function() {
       persistence.reset(function() {
           persistence.schemaSync(function() {
               var allTasks = Task.all();
@@ -713,18 +713,36 @@ $(document).ready(function(){
               allTasks.addEventListener('change', function() {
                   changesDetected++;
                 });
+
+              var tasks = [];
               for(var i = 0; i < 10; i++) {
                 var task = new Task({name: "Task " + i});
                 task.done = i % 2 === 0;
-                Task.all().add(task);
+                tasks.push(task);
+                if (i < 5) {
+                  Task.all().add(task);
+                } else {
+                  persistence.add(task);
+                }
               }
-              equals(10, changesDetected, "detected all changes");
+              equals(changesDetected, 10, "detected all additions");
+
+              changesDetected = 0;
+              for(var i = 0; i < 10; i++) {
+                if (i < 5) {
+                  persistence.remove(tasks[i]);
+                } else {
+                  Task.all().remove(tasks[i]);
+                }
+              }
+              equals(changesDetected, 10, "detected all removals");
+
               start();
             });
         });
     });
 
-  asyncTest("filter collection", function() {
+  asyncTest("add/remove with filtered collection", function() {
       persistence.reset(function() {
           persistence.schemaSync(function() {
               var allTasks = Task.all().filter("done", "=", true);
@@ -732,24 +750,73 @@ $(document).ready(function(){
               allTasks.addEventListener('change', function() {
                   changesDetected++;
                 });
+
+              var tasks = [];
               for(var i = 0; i < 10; i++) {
                 var task = new Task({name: "Task " + i});
                 task.done = i % 2 === 0;
-                Task.all().add(task);
+                tasks.push(task);
+                if (i < 5) {
+                  Task.all().add(task);
+                } else {
+                  persistence.add(task);
+                }
               }
-              equals(5, changesDetected, "detected all changes");
+              equals(changesDetected, 5, "detected all additions");
+
+              changesDetected = 0;
+              persistence.remove(tasks[0]);
+              Task.all().remove(tasks[2]);
+              equals(changesDetected, 2, "detected all removals");
+
               changesDetected = 0;
               Task.all().filter("done", "=", true).list(function(results) {
                   results.forEach(function(r) {
                       r.done = false;
                     });
-                  equals(5, changesDetected, "detected filter changes");
+                  equals(changesDetected, 3, "detected filter changes");
+
                   start();
                 });
             });
         });
     });
     
+  asyncTest("add/remove with many-to-many collection", function() {
+      persistence.reset(function() {
+          persistence.schemaSync(function() {
+              var task = new Task({name: "Some task"});
+              persistence.add(task);
+              var tag1 = new Tag({name: "important"});
+              persistence.add(tag1);
+              var tag2 = new Tag({name: "today"});
+              // not persisting tag2 yet
+
+              changesDetected = 0;
+              task.tags.addEventListener('change', function() {
+                  changesDetected++;                  
+                });
+
+              task.tags.add(tag1);
+              task.tags.add(tag2);
+              equals(changesDetected, 2, 'detected all additions');
+
+              changesDetected = 0;
+              task.tags.filter('name', '=', 'new').addEventListener(function() {
+                  changesDetected++;
+                });
+              var tag3 = new Tag({name: 'new'});
+              task.tags.add(tag3)
+              equals(changesDetected, 1, 'detected filtered addition');
+
+              changesDetected = 0;
+              tag3.name = 'old';
+              equals(changesDetected, 1, 'detected property change');
+
+              start();
+            });
+        });
+    });
     
     
     module("Indexes");
