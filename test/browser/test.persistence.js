@@ -452,6 +452,28 @@ $(document).ready(function(){
       dateFilterTests(coll, start);
     });
 
+  asyncTest("Relationship filter", function() {
+      var tags = [];
+      for(var i = 0; i < 4; i++) {
+        var tag  = new Tag({name: "Tag " + i});
+        persistence.add(tag);
+        tags.push(tag);
+      }
+      var tasks = [];
+      for(var i = 0; i < 15; i++) {
+        var task = new Task({name: "Task " + i, counter: i});
+        persistence.add(task);
+        task.tags.add(tags[Math.floor(i / 5)]);
+        tasks.push(task);
+      }
+
+      Tag.all().relationship('tasks', null).list(function (result) {
+          equals(result.length, 1, 'Correct number of orphaned tags');
+          equals(result[0].id, tags[3].id, 'Correct orphaned tag');
+          start();
+        });
+    });
+
 
   function intOrderTests(coll, callback) {
     var tasks = [];
