@@ -823,28 +823,36 @@ $(document).ready(function(){
               task.tags.add(tag2);
               equals(changesDetected, 2, 'detected two additions');
 
-              var filteredChangesDetected = 0;
-              task.tags.filter('name', '=', 'new').addEventListener('change', function() {
-                  filteredChangesDetected++;
-                });
-              var tag3 = new Tag({name: 'new'});
-              var tag4 = new Tag({name: 'other'});
-              var tag5 = new Tag({name: 'new'});
-              task.tags.add(tag3);
-              task.tags.add(tag4);
-              persistence.add(tag5);
-              equals(filteredChangesDetected, 1, 'detected filtered addition');
-
-              filteredChangesDetected = 0;
-              tag3.name = 'old';
-              equals(filteredChangesDetected, 1, 'detected property change');
-
               changesDetected = 0;
-              var task2 = new Task({name: "Some other task"});
-              task2.tags.add(tag1);
-              equals(changesDetected, 0, 'no changes when adding to another collection');
+              persistence.remove(tag1);
 
-              start();
+              // This event is actually triggered asyncronously, so we have to wait a little.
+              setTimeout(function () {
+                equals(changesDetected, 1, 'detected removal');
+
+                var filteredChangesDetected = 0;
+                task.tags.filter('name', '=', 'new').addEventListener('change', function() {
+                    filteredChangesDetected++;
+                  });
+                var tag3 = new Tag({name: 'new'});
+                var tag4 = new Tag({name: 'other'});
+                var tag5 = new Tag({name: 'new'});
+                task.tags.add(tag3);
+                task.tags.add(tag4);
+                persistence.add(tag5);
+                equals(filteredChangesDetected, 1, 'detected filtered addition');
+
+                filteredChangesDetected = 0;
+                tag3.name = 'old';
+                equals(filteredChangesDetected, 1, 'detected property change');
+
+                changesDetected = 0;
+                var task2 = new Task({name: "Some other task"});
+                task2.tags.add(tag1);
+                equals(changesDetected, 0, 'no changes when adding to another collection');
+
+                start();
+              }, 100);
             });
         });
     });
