@@ -828,7 +828,11 @@ $(document).ready(function(){
                   filteredChangesDetected++;
                 });
               var tag3 = new Tag({name: 'new'});
-              task.tags.add(tag3)
+              var tag4 = new Tag({name: 'other'});
+              var tag5 = new Tag({name: 'new'});
+              task.tags.add(tag3);
+              task.tags.add(tag4);
+              persistence.add(tag5);
               equals(filteredChangesDetected, 1, 'detected filtered addition');
 
               filteredChangesDetected = 0;
